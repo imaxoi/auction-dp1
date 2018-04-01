@@ -1,0 +1,189 @@
+<h1>Register</h1>
+			
+			
+    <p> Register to access the advanced features. You will create your personal profile, 
+		and you will be able to bid on the item(s) and to check your bids.
+		Moreover DPI offers the unique feature of setting a maximum bid, so you won't have
+		to check the website continuosly.</p>
+		<form id="regForm" action="register.php" method="post">
+		<table>
+		<tr>
+			<td> E-mail: </td><td><input type="email" name = "email" id="email" placeholder="v@d.it" title="It will be used to log-in." required></td>
+			<td id="emailok"> </td>
+		</tr>
+		<tr>
+			<td> Password: </td><td><input type="password" name = "psw" id="psw" title="One number, one letter at least." placeholder="a-Z 0-9" required></td> <td id="pswok"> </td>
+		</tr>
+		<tr>
+			<td> Full name: </td><td><input type="text" name = "firstname" id="firstname" placeholder="First name" required><br />
+			<input type="text" name = "familyname" id="familyname" placeholder="Family name" required></td>
+			<td id="nameok"> </td>
+		</tr>
+		<tr>
+			<td id="capcha_text"></td><td><input type="text" id="capcha" placeholder="Result" required></td><td id="capchaok"></td>
+		</tr>
+		<tr align=center id="buttons_tr">
+		<noscript>
+			<td colspan=2 ><input type="submit" id="subm" value="Register"> &emsp; <input type="reset" id="rst" value="Clear"></td>
+		</noscript>
+		</tr>
+		
+		</table>
+		</form>
+		<div class="snackbar" id="snackbar"></div>
+
+<script type="text/javascript"><!--
+	//If there is javascript, the "smart" button will appear. If there is not, the normal submit will.
+	$("#buttons_tr").html("<td colspan=2 ><input type='button' id='subm' value='Register'> &emsp; <input type='reset' id='rst' value='Clear'></td>");
+
+    var validN = false; var validP = false; var validFN = false; var validC = false; var validE = false; validE_duplicate = false;
+
+	//Important, the user has to retype everything in order to trigger controls
+	document.getElementById("regForm").reset();
+
+/*START FORMAT VALIDATION */
+    var evaluatePsw = function () {
+		var psw= $("#psw").val();
+		if (psw.search(/^([A-z]|[0-9])+$/) == -1 || psw.search(/\d/) == -1 || psw.search(/[a-zA-Z]/) == -1){
+			$("#pswok").html("<p class=error>Not valid. Only alphanumeric characters, and at least one number and one letter.</p>");
+			$("#psw").css("border","1px solid #ff4d4d");
+			validP=false;
+		}else{
+			validP=true;
+			$("#pswok").html("");
+            $("#psw").css("border", "");;
+
+		}
+	}
+	document.getElementById("psw").oninput = evaluatePsw;
+
+	var submit_registration=function(){
+        if (validN == true && validP == true && validFN == true && validC == true && validE == true && validE_duplicate==true)
+			$("#regForm").submit();
+	}
+	$("#subm").click(submit_registration);
+
+	var evaluateName = function(){
+		var na= document.getElementById("firstname").value;
+		if (na.search(/^([A-z])+$/) == -1){
+			$("#nameok").html("<p class=error>Not valid. Only alphanumeric character.</p>");
+			$("#firstname").css("border","1px solid  #ff4d4d");
+			validN=false;
+		}else{
+			validN=true;
+			if(validN && validFN)
+                $("#nameok").html("");
+            $("#firstname").css("border", "");
+
+
+		}
+	}
+	document.getElementById("firstname").oninput = evaluateName;
+
+	var evaluateFamilyName = function(){
+		var na= document.getElementById("familyname").value;
+		if (na.search(/^([A-z])+$/) == -1){
+			$("#nameok").html("<p class=error>Not valid. Only alphanumeric character.</p>");
+			$("#familyname").css("border", "1px solid  #ff4d4d");
+			validFN=false;
+		}else{
+			validFN=true;
+			if(validN && validFN)
+                $("#nameok").html("");
+            $("#familyname").css("border", "");
+
+		}
+	}
+	document.getElementById("familyname").oninput = evaluateFamilyName;
+
+	var n1 = Math.round(Math.random()*10);
+	var n2 = Math.round(Math.random()*10);
+
+	$("#capcha_text").html(String("Sum of " + n1 + " and " + n2 + ":"));
+	var evaluateCapcha=function(){
+		if(parseInt(document.getElementById("capcha").value) != (n1+n2) ){
+			$("#capchaok").html( "<p class=error>Are you a bot?</p>");
+			$("#capcha").css("border","1px solid  #ff4d4d");
+			validC=false;
+		} else {
+			validC=true;
+            $("#capchaok").html("");
+            $("#capcha").css("border", "");
+
+		}
+
+	}
+
+	document.getElementById("capcha").oninput = evaluateCapcha;
+
+	var evaluateEmail = function(){
+		if(!document.getElementById("email").checkValidity()){
+            $("#emailok").html("<p class=error>E-mail format not valid.</p>");
+            $("#email").css("border", "1px solid  #ff4d4d");
+			validE=false;
+		}else{
+			validE=true;
+            $("#emailok").html("");
+            $("#email").css("border", "");
+		}
+	}
+
+	document.getElementById("email").oninput = evaluateEmail;
+/*END FORMAT VALIDATION */
+
+/*AJAX USERNAME CONTROL*/
+    evaluateEmail_duplicate = function () {
+        if (validE) {
+            var userValReq = new XMLHttpRequest();
+            userValReq.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    if (this.responseText == "unavailable") {
+                        validE_duplicate = false;
+                        $("#emailok").html("<p class=error>E-mail already exists.</p>");
+                        $("#email").css("border", "1px solid  #ff4d4d");
+                    } else {
+                        validE_duplicate = true;
+                        $("#emailok").html("");
+                        $("#email").css("border", "");
+                    }
+                }
+            }//userValReq.onreadystatechange = function ()
+            userValReq.open("GET", "checkName.php?email=" + document.getElementById("email").value, true);
+            userValReq.send();
+        }// if (validE)
+    }
+
+    document.getElementById("email").onblur = evaluateEmail_duplicate;
+
+/*END AJAX USERNAME CONTROL*/
+
+/*Suggestions*/
+    $("#psw").focus(function () {
+        $("#snackbar").html("Only alphanumeric characters, and at least one number and one letter.");
+        $("#snackbar").fadeIn();
+    });
+    $("#psw").focusout(function () {
+        $("#snackbar").fadeOut();
+    });
+
+    $("#email").focus(function () {
+        $("#snackbar").html("Your email address (x@y.z) to be used as username.");
+        $("#snackbar").fadeIn();
+    });
+    $("#email").focusout(function () {
+        $("#snackbar").fadeOut();
+    });
+
+    $("#capcha").focus(function () {
+        $("#snackbar").html("This is to prevent dumb bots from spamming.");
+        $("#snackbar").fadeIn();
+    });
+    $("#capcha").focusout(function () {
+        $("#snackbar").fadeOut();
+    });
+
+/*End suggestions*/
+
+
+
+//--></script>
